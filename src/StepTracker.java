@@ -1,8 +1,9 @@
 import java.util.Scanner;
 
 public class StepTracker {
-    private Scanner scanner;
-    private MonthData[] monthToData = new MonthData[12];
+    private final Scanner scanner;
+    MonthData[] monthToData = new MonthData[12];
+    Converter converter = new Converter();
     int goalByStepsPerDay = 10000;
 
     public StepTracker(Scanner scanner) {
@@ -14,97 +15,99 @@ public class StepTracker {
     }
 
     public void addNewNumberStepsPerDay() {
-        System.out.println("Введите номер месяца");
-        int month = scanner.nextInt();
-        if (month < 1 || month > 12) {
+        int month = inputMonth();
+        if (month < 0) {
             System.out.println("Номер месяца должен быть от 1 до 12");
             return;
         }
 
-        System.out.println("Введите день от 1 до 30 (включительно)");
+        System.out.print("Введите день от 1 до 30 (включительно): ");
         int day = scanner.nextInt();
         if (day < 1 || day > 30) {
             System.out.println("Число дня должно быть от 1 до 30");
             return;
         }
 
-        System.out.println("Введите количество шагов");
+        System.out.print("Введите количество шагов: ");
         int steps = scanner.nextInt();
         if (steps < 0) {
             System.out.println("Число шагов не должно быть отрицательным");
             return;
         }
-        int[] days = monthToData[month - 1].getDays();
-        days[day] = steps;
+        int[] days = monthToData[month].getDays();
+        days[day - 1] = steps;
     }
 
     public void changeStepGoal() {
+        System.out.println("Текущая цель " + goalByStepsPerDay + " шагов");
+        System.out.print("Введите новую цель: ");
         int newGoal = scanner.nextInt();
         if (newGoal <= 0) {
             System.out.println("Цель должна быть больше нуля.");
             return;
         }
         goalByStepsPerDay = newGoal;
+        System.out.println("Новая цель " + newGoal + " шагов");
     }
 
-    public void printDaysAndStepsFromMonth() {
-        System.out.println("Введите номер месяца");
-        int month = scanner.nextInt();
-        int[] days = monthToData[month].getDays();
-
-
-        for (int i = 0; i < days.length; i++) {
-            int day = i + 1;
-            System.out.println(day + " день: " + days[i]);
-
-
+    public void printStatistic() {
+        int month = inputMonth();
+        if (month < 0) {
+            System.out.println("Номер месяца должен быть от 1 до 12");
+            return;
         }
+        System.out.println("Статистика за " + month + " месяц");
+        System.out.println("Статистика по дням: ");
+        monthToData[month].printDaysAndStepsFromMonth();
+
+        int sumSteps = monthToData[month].sumStepsFromMonth();
+        System.out.println("Сумма шагов за месяц: " + sumSteps);
+        System.out.println("Максимальное пройденное количества шагов за месяц: " + maxSteps(month));
+        System.out.println("Среднее пройденное количество шагов за месяц: " + averageStepsFromMonth(sumSteps));
+        System.out.println("Пройдено за месяц " + converter.convertToKm(sumSteps) + " километров");
+        System.out.println("Сожжено за месяц " + converter.convertStepsToKilocalories(sumSteps) + " ккалорий");
+        System.out.println("Лучшая серия шагов составляет " + bestSeries(goalByStepsPerDay, month) + " дней");
     }
 
-    int sumStepsFromMonth() {
-        System.out.println("Введите номер месяца");
-        int month = scanner.nextInt();
-        int[] days = monthToData[month].getDays();
-        int sum = 0;
-        for (int i = 0; i < days.length; i++) {
-            sum += days[i];
-        }
-        return sum;
+    private int averageStepsFromMonth(int sumSteps) {
+        return sumSteps/ 30;
     }
 
-    public int maxSteps() {
-        System.out.println("Введите номер месяца");
-        int month = scanner.nextInt();
+    private int maxSteps(int month) {
         int[] days = monthToData[month].getDays();
         int maxSteps = 0;
-        for (int i = 0; i < days.length; i++) {
-            if (days[i] > maxSteps) {
-                maxSteps = days[i];
+        for (int day : days)
+            if (day > maxSteps) {
+                maxSteps = day;
             }
-        }
         return maxSteps;
     }
 
-    public int bestSeries(int goalByStepsPerDay) {
-        System.out.println("Введите номер месяца");
-        int month = scanner.nextInt();
+    private int bestSeries(int goalByStepsPerDay, int month) {
         int[] days = monthToData[month].getDays();
-
         int currentSeries = 0;
         int finalSeries = 0;
 
-        for (int i = 0; i < days.length; i++) {
-            if (days[i] >= goalByStepsPerDay) {
-                if (currentSeries > 0) {
-                    currentSeries++;
-                } else {
-                    currentSeries = 1;
+        for (int day : days) {
+            if (day >= goalByStepsPerDay) {
+                currentSeries++;
+            } else {
+                if (currentSeries > finalSeries) {
+                    finalSeries = currentSeries;
                 }
-            }
-            if (currentSeries > finalSeries) {
-                finalSeries = currentSeries;
+                currentSeries = 0;
             }
         }
         return finalSeries;
     }
+
+    private int inputMonth() {
+        System.out.print("Введите номер месяца: ");
+        int month = scanner.nextInt();
+        if (month < 1 || month > 12) {
+            return -1;
+        }
+        return month - 1;
+    }
 }
+

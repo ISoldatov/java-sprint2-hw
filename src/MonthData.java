@@ -1,5 +1,5 @@
 public class MonthData {
-    private int[] days = new int[30];
+    private final int[] days = new int[30];
 
     public int[] getDays() {
         return this.days;
@@ -12,7 +12,11 @@ public class MonthData {
     }
 
     int sumStepsFromMonth() {
-        return 0;
+        int sumSteps = 0;
+        for (int day : days) {
+            sumSteps += day;
+        }
+        return sumSteps;
     }
 
 }
